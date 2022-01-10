@@ -43,8 +43,7 @@ app.use(
 app.use((req, res, next) => {
   const sessionUserId = req.session.user?._id;
   if (!sessionUserId) {
-    next()
-    return
+    return next()
   }
   User.findById(sessionUserId)
     .then(user => {
@@ -68,18 +67,6 @@ mongoose
     { useNewUrlParser: true, useUnifiedTopology: true }
   )
   .then(result => {
-    User.findOne().then(user => {
-      if (!user) {
-        const user = new User({
-          name: process.env.DAMMY_USER_NAME,
-          email: process.env.DAMMY_USER_EMAIL,
-          cart: {
-            items: []
-          }
-        });
-        user.save();
-      }
-    });
     app.listen(process.env.PORT);
   })
   .catch(err => {
