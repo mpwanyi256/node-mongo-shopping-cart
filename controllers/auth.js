@@ -29,33 +29,38 @@ exports.postLogin = (req, res, next) => {
     const email = req.body.email.trim(),
           password = req.body.password.trim();
 
+    const redirectOnAuthFailure = () => {
+        return res.render('auth/login', {
+            path: '/login',
+            pageTitle: 'Login',
+            isAuthenticated: req.session.isLoggedIn,
+            error: 'Invalid email or password'
+        })
+    }
+
     User.findOne({ email })
         .then(user => {
             if (user) {
-                req.session.isLoggedIn = true;
-                req.session.user = user;
-                req.session.save((err) => {
-                    console.log(err)
-                    res.redirect('/');
+                bcrypt.compare(password, user.password)
+                .then(match => {
+                    if (match) {
+                        req.session.isLoggedIn = true;
+                        req.session.user = user;
+                        req.session.save((err) => {
+                            res.redirect('/');
+                        })
+                    } else {
+                        redirectOnAuthFailure()
+                    }
                 })
+                .catch(e => { redirectOnAuthFailure() })
             } else {
-                res.render('auth/login', {
-                    path: '/login',
-                    pageTitle: 'Login',
-                    isAuthenticated: req.session.isLoggedIn,
-                    error: `No user with email ${email} was found`
-                }) 
+                redirectOnAuthFailure() 
             }
 
         })
         .catch(e => {
-            console.log(`No user with email ${email} was found`)
-            res.render('auth/login', {
-                path: '/login',
-                pageTitle: 'Login',
-                isAuthenticated: false,
-                error: `No user with email ${email} was found`
-            }) 
+            redirectOnAuthFailure()
         });
 }
 
@@ -71,37 +76,26 @@ exports.postSignup = (req, res, next) => {
             if (userDocument) {
                 return res.redirect('/signup');
             }
-            return bcrypt.hash(password, 12);
-       })
-       .then(harshedPassword => {
-        const user = new User({
-            email,
-            name: email,
-            password: harshedPassword,
-            cart: {
-                items: []
-            }
-        });
-
-        return user.save()
-       })
-       .then(result => {
-           res.redirect('/login')
+            return bcrypt.hash(password, 12)
+            .then(harshedPassword => {
+             const user = new User({
+                 email,
+                 name: email,
+                 password: harshedPassword,
+                 cart: {
+                     items: []
+                 }
+             });
+     
+             return user.save()
+            })
+            .then(result => {
+                res.redirect('/login')
+            })
        })
        .catch(e => {
-           console.log(e)
+            res.redirect('/signup');
        })
-
-    
-    // if (req.session.user) {
-    //     res.redirect('/')
-    // }
-    // res.render('auth/signup', {
-    //     path: '/signup',
-    //     pageTitle: 'Signup',
-    //     isAuthenticated: req.session.isLoggedIn,
-    //     error: ''
-    // })
 }
 
 exports.logout = (req, res, next) => {
