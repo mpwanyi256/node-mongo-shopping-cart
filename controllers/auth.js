@@ -8,8 +8,7 @@ exports.getLogin = (req, res, next) => {
     res.render('auth/login', {
         path: '/login',
         pageTitle: 'Login',
-        isAuthenticated: req.session.isLoggedIn,
-        error: ''
+        error: req.flash('error')
     })
 }
 
@@ -20,7 +19,6 @@ exports.getSignup = (req, res, next) => {
     res.render('auth/signup', {
         path: '/signup',
         pageTitle: 'Signup',
-        isAuthenticated: req.session.isLoggedIn,
         error: ''
     })
 }
@@ -30,12 +28,8 @@ exports.postLogin = (req, res, next) => {
           password = req.body.password.trim();
 
     const redirectOnAuthFailure = () => {
-        return res.render('auth/login', {
-            path: '/login',
-            pageTitle: 'Login',
-            isAuthenticated: req.session.isLoggedIn,
-            error: 'Invalid email or password'
-        })
+        req.flash('error', 'Invalid email or password.');
+        res.redirect('/login');
     }
 
     User.findOne({ email })
