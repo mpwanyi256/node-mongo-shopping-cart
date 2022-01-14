@@ -12,6 +12,7 @@ const session = require('express-session');
 const MongoDbStore = require('connect-mongodb-session')(session);
 const csrf = require('csurf');
 const flash = require('connect-flash');
+const malter = require('multer');
 
 const errorController = require('./controllers/error');
 const User = require('./models/user');
@@ -31,9 +32,30 @@ app.set('views', 'views');
 const adminRoutes = require('./routes/admin');
 const shopRoutes = require('./routes/shop');
 const authRoutes = require('./routes/auth');
+const multer = require('multer');
+
+const UploadsStorage = multer.diskStorage({
+  destination: (req, file, cb) => { 
+    cb(null, 'images');
+   },
+  filename: (req, file, cb) => {
+    cb(null, `${new Date().toISOString()}${file.originalname}`)
+  }
+});
+
+const uploadedFileValidator = (req, file, cb) => {
+  let isValidFile = false;
+  if (['image/png', 'image/jpg', 'image/jpeg'].includes(file.mimetype)) {
+    isValidFile = true;
+  }
+
+  cb(null, isValidFile);
+}
 
 app.use(bodyParser.urlencoded({ extended: false }));
+app.use(malter({ storage :UploadsStorage, fileFilter: uploadedFileValidator }).single('image'));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/images', express.static(path.join(__dirname, 'images')));
 
 app.use(
   session({ 
