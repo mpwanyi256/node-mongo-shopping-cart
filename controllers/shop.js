@@ -1,5 +1,11 @@
 const Product = require('../models/product');
 const Order = require('../models/order');
+const fs = require('fs');
+const path = require('path');
+
+const ITEMS_PER_PAGE = 2;
+
+const PDFDocument = require('pdfkit');
 
 exports.getProducts = (req, res, next) => {
   Product.find()
@@ -31,14 +37,25 @@ exports.getProduct = (req, res, next) => {
 };
 
 exports.getIndex = (req, res, next) => {
-  Product.find()
-    .then(products => {
+
+  const page = req.query.page;
+  let totalPages;
+
+  Product.find().count().then(totalProducts => {
+    totalPages = Math.ceil(totalProducts / ITEMS_PER_PAGE);
+
+    return Product.find()
+      .skip((page - 1) * ITEMS_PER_PAGE)
+      .limit(ITEMS_PER_PAGE)
+  }).then(products => {
       res.render('shop/index', {
         prods: products,
         pageTitle: 'Shop',
         path: '/',
         isAuthenticated: req.session.user,
-        csrfToken: req.csrfToken()
+        csrfToken: req.csrfToken(),
+        pages: totalPages,
+        currentPage: page
       });
     })
     .catch(err => {
@@ -122,3 +139,16 @@ exports.getOrders = (req, res, next) => {
     })
     .catch(err => console.log(err));
 };
+
+exports.getInvoice = (req, res, next) => {
+  // download pdf file
+  const orderId = req.params.orderId,
+        invoiceName = `invoice-${orderId}.pdf`,
+        invoicePath = path.join('data', 'invoices', invoiceName);
+
+  const fileBuffer = fs.createReadStream(invoicePath);
+  res.setHeader('Content-Type', 'Application/pdf');
+  res.setHeader('Content-Disposition', `inline; filename="${invoiceName}"`);
+  fileBuffer.pipe(res);
+
+}

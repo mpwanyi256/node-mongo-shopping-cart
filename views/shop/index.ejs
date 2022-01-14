@@ -28,6 +28,11 @@
                     </article>
                 <% } %>
             </div>
+            <section class="pagination">
+                <% for (let i =1; i<= pages; i++) { %>
+                    <a class="<%= currentPage == i ? 'active' : '' %>" href="/?page=<%= i %>"><%= i %></a>
+                <% } %>
+            </section>
         <% } else { %>
             <h1>No Products Found!</h1>
         <% } %>
