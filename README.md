@@ -1,14 +1,15 @@
-![Screenshot 2022-01-15 at 14 39 23](https://user-images.githubusercontent.com/20843520/149620462-3c903f53-0f11-4d90-a4a1-24d4192bfa45.png)
-
-
 ## Shopping Cart APP Built With Node.JS, Express, MongoDB, EJS, Stripe & EJS
 - This is a simple NodeJs shopping cart application built on mongoDB, serving template pages with ejs. In this project I implemented a full CRUD operations
+
+![Screenshot 2022-01-15 at 14 39 23](https://user-images.githubusercontent.com/20843520/149620462-3c903f53-0f11-4d90-a4a1-24d4192bfa45.png)
+
+![Screenshot 2022-01-15 at 14 41 08](https://user-images.githubusercontent.com/20843520/149620501-4a9b70cb-a34d-4b5b-ad7d-48bd6d951d57.png)
 
 ## Project setup
 Make sure you have [Node.js](https://nodejs.org/en/) instaled.
 
 - git clone `git@github.com:mpwanyi256/node-mongo-shopping-cart.git`
-- cd Cities
+- cd node-mongo-shopping-cart
 - create a `.env` file in the project root directory with the following key pair attributes
 
     - DB_URI=your-mongodb-connection-uri
@@ -20,7 +21,7 @@ Make sure you have [Node.js](https://nodejs.org/en/) instaled.
     - STRIPE_PRIVATE_KEY=your-stripe
 
 - npm install
-- npm run serve
+- npm run start
 
 Your app should be running on [localhost:3000/](http://localhost:8080/)
 
