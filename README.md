@@ -1,3 +1,6 @@
+![Screenshot 2022-01-15 at 14 39 23](https://user-images.githubusercontent.com/20843520/149620462-3c903f53-0f11-4d90-a4a1-24d4192bfa45.png)
+
+
 ## Shopping Cart APP Built With Node.JS, Express, MongoDB, EJS, Stripe & EJS
 - This is a simple NodeJs shopping cart application built on mongoDB, serving template pages with ejs. In this project I implemented a full CRUD operations
 
