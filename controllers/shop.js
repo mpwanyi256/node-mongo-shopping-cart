@@ -2,6 +2,7 @@ const Product = require('../models/product');
 const Order = require('../models/order');
 const fs = require('fs');
 const path = require('path');
+const stripe = require('stripe')(process.env.STRIPE_PRIVATE_KEY)
 
 const ITEMS_PER_PAGE = 2;
 
@@ -41,7 +42,7 @@ exports.getIndex = (req, res, next) => {
   const page = req.query.page;
   let totalPages;
 
-  Product.find().count().then(totalProducts => {
+  Product.find().countDocuments().then(totalProducts => {
     totalPages = Math.ceil(totalProducts / ITEMS_PER_PAGE);
 
     return Product.find()
@@ -101,6 +102,32 @@ exports.postCartDeleteProduct = (req, res, next) => {
     .catch(err => console.log(err));
 };
 
+exports.getCheckoutSuccess = (req, res, next) => {
+  req.user
+    .populate('cart.items.productId')
+    .execPopulate()
+    .then(user => {
+      const products = user.cart.items.map(i => {
+        return { quantity: i.quantity, product: { ...i.productId._doc } };
+      });
+      const order = new Order({
+        user: {
+          name: req.user.name,
+          userId: req.user
+        },
+        products: products
+      });
+      return order.save();
+    })
+    .then(result => {
+      return req.user.clearCart();
+    })
+    .then(() => {
+      res.redirect('/orders');
+    })
+    .catch(err => console.log(err));
+};
+
 exports.postOrder = (req, res, next) => {
   req.user
     .populate('cart.items.productId')
@@ -151,4 +178,45 @@ exports.getInvoice = (req, res, next) => {
   res.setHeader('Content-Disposition', `inline; filename="${invoiceName}"`);
   fileBuffer.pipe(res);
 
+}
+
+exports.getCheckout = (req, res, next) => {
+  let products, totalCharge = 0;
+
+  req.user
+    .populate('cart.items.productId')
+    .execPopulate()
+    .then(user => {
+      products = user.cart.items; 
+
+      products.forEach(el => {
+        totalCharge+=(el.quantity * el.productId.price)
+      });
+
+      // Generate stripe session ID
+      return stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: products.map(p => {
+          return {
+            name: p.productId.title,
+            description: p.productId.description,
+            amount: p.productId.price * 100,
+            currency: 'usd',
+            quantity: p.quantity
+          }
+        }),
+        success_url: `${req.protocol}://${req.get('host')}/checkout/success`,
+        cancel_url: `${req.protocol}://${req.get('host')}/checkout`
+      })
+    })
+    .then(stripeSession => {
+      res.render('shop/checkout', {
+        path: '/checkout',
+        pageTitle: 'Checkout',
+        products: products,
+        total: totalCharge,
+        sessionId: stripeSession.id
+      });
+    })
+    .catch(err => console.log(err));
 }
